@@ -158,10 +158,11 @@
             <input id="in-when" type="datetime-local">
           </div>
         </div>
-        <label class="f">Photos (top-down, plus one at an angle)</label>
+        <label class="f">Photos (top-down, plus one at an angle; up to 3)</label>
         <div class="photos" id="photos-meal"></div>
-        <label class="btn" for="in-photo-meal" id="add-photo-meal" style="display:inline-block">+ Add photo</label>
-        <input id="in-photo-meal" type="file" accept="image/*" class="hidden">
+        <div class="row" id="add-photo-meal"><label class="btn" for="in-photo-meal" style="text-align:center">📷 Take photo</label><label class="btn" for="in-gallery-meal" style="text-align:center">🖼 Choose photos</label></div>
+        <input id="in-photo-meal" type="file" accept="image/*" capture="environment" class="hidden">
+        <input id="in-gallery-meal" type="file" accept="image/*" multiple class="hidden">
         <label class="f" for="in-note">Note (optional)</label>
         <textarea id="in-note" placeholder="e.g. rice 180 g, cooked in 1 tbsp olive oil, farmed salmon, ate half"></textarea>
         <div class="row" style="margin-top:12px">
@@ -237,8 +238,9 @@
         <h2 id="food-form-title">Add food</h2>
         <label class="f">Photos: front of package and the Nutrition Facts label</label>
         <div class="photos" id="photos-food"></div>
-        <label class="btn" for="in-photo-food" id="add-photo-food" style="display:inline-block">+ Add photo</label>
-        <input id="in-photo-food" type="file" accept="image/*" class="hidden">
+        <div class="row" id="add-photo-food"><label class="btn" for="in-photo-food" style="text-align:center">📷 Take photo</label><label class="btn" for="in-gallery-food" style="text-align:center">🖼 Choose photos</label></div>
+        <input id="in-photo-food" type="file" accept="image/*" capture="environment" class="hidden">
+        <input id="in-gallery-food" type="file" accept="image/*" multiple class="hidden">
         <button class="block" id="btn-food-read" style="margin-top:10px" disabled>Read label</button>
         <div id="food-read-status" style="margin-top:8px"></div>
 
@@ -299,8 +301,9 @@
         <h2 id="supp-form-title">Add supplement</h2>
         <label class="f">Photos: the Supplement Facts table (and the front, optional)</label>
         <div class="photos" id="photos-supp"></div>
-        <label class="btn" for="in-photo-supp" id="add-photo-supp" style="display:inline-block">+ Add photo</label>
-        <input id="in-photo-supp" type="file" accept="image/*" class="hidden">
+        <div class="row" id="add-photo-supp"><label class="btn" for="in-photo-supp" style="text-align:center">📷 Take photo</label><label class="btn" for="in-gallery-supp" style="text-align:center">🖼 Choose photos</label></div>
+        <input id="in-photo-supp" type="file" accept="image/*" capture="environment" class="hidden">
+        <input id="in-gallery-supp" type="file" accept="image/*" multiple class="hidden">
         <button class="block" id="btn-supp-read" style="margin-top:10px" disabled>Read Supplement Facts</button>
         <div id="supp-read-status" style="margin-top:8px"></div>
 
@@ -510,13 +513,19 @@ function photoPicker(name, max, onChange) {
     if (p.path) picker.removed.push(p.path);
     picker.render();
   });
-  input.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+  const onFiles = async (e) => {
+    const files = [...e.target.files];
     e.target.value = '';
-    if (!file) return;
-    try { picker.list.push(await resizeImage(file)); picker.render(); }
-    catch (err) { toast(err.message); }
-  });
+    if (!files.length) return;
+    const room = max - picker.list.length;
+    if (files.length > room) toast(`Only ${max} photos allowed here; using the first ${room}.`);
+    for (const file of files.slice(0, Math.max(0, room))) {
+      try { picker.list.push(await resizeImage(file)); picker.render(); }
+      catch (err) { toast(err.message); }
+    }
+  };
+  input.addEventListener('change', onFiles);
+  $('in-gallery-' + name).addEventListener('change', onFiles);
   return picker;
 }
 
@@ -588,7 +597,7 @@ let draft = null;
 let currentDay = todayKey();
 let foods = [];        // household My Foods
 let supps = [];        // this user's supplements
-const mealPhotos = photoPicker('meal', 2, (p) => { $('btn-analyze').disabled = p.list.length === 0; });
+const mealPhotos = photoPicker('meal', 3, (p) => { $('btn-analyze').disabled = p.list.length === 0; });
 const foodPhotos = photoPicker('food', 3, (p) => { $('btn-food-read').disabled = p.newOnes().length === 0; });
 const suppPhotos = photoPicker('supp', 3, (p) => { $('btn-supp-read').disabled = p.newOnes().length === 0; });
 
