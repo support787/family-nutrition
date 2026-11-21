@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nutrition">
+<meta name="theme-color" content="#1f6f5c">
+<title>Family Nutrition</title>
+<style>
+  :root {
+    --bg: #f6f7f5; --card: #fff; --ink: #1d2420; --muted: #67706b; --line: #e2e6e3;
+    --accent: #1f6f5c; --accent-soft: #e3f1ec; --warn: #b26a00; --warn-soft: #fff4e0; --danger: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--accent); color: #fff;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header .who { font-size: 13px; opacity: .85; }
+  main { max-width: 640px; margin: 0 auto; padding: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .card h2 { font-size: 16px; margin: 0 0 10px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .small { font-size: 13px; }
+  button, .btn { font: inherit; border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.ghost { background: transparent; border-color: transparent; color: var(--accent); padding: 6px 8px; }
+  button.danger { color: var(--danger); }
+  button:disabled { opacity: .5; }
+  button.block { width: 100%; }
+  input, select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; color: var(--ink); width: 100%; }
+  textarea { min-height: 60px; resize: vertical; }
+  label.f { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  .row > .shrink { flex: 0 0 auto; }
+  nav.tabs { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--line);
+    display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav.tabs button { flex: 1; border: 0; border-radius: 0; padding: 14px 0; color: var(--muted); background: #fff; }
+  nav.tabs button.on { color: var(--accent); font-weight: 700; }
+  .hidden { display: none !important; }
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .photos .ph { position: relative; }
+  .photos img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+  .photos .x { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; padding: 0; border-radius: 13px; font-size: 14px; }
+  .item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; background: #fff; }
+  .item.low { border-color: var(--warn); background: var(--warn-soft); }
+  .item .name { font-weight: 600; }
+  .item .match { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .item .grams { display: flex; gap: 6px; align-items: center; }
+  .item .grams input { width: 90px; flex: 0 0 90px; text-align: right; font-weight: 600; }
+  .item .grams select { flex: 1; }
+  .item .grams button { padding: 8px 10px; flex: 0 0 auto; }
+  .item .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .item .mini { font-size: 13px; margin-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px dashed var(--accent); color: var(--accent); background: #fff; border-radius: 16px; padding: 6px 10px; font-size: 14px; }
+  .results button { display: block; width: 100%; text-align: left; margin-top: 6px; font-size: 14px; padding: 8px 10px; }
+  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+  .totals div { background: var(--accent-soft); border-radius: 10px; padding: 8px 4px; }
+  .totals b { display: block; font-size: 18px; }
+  .totals span { font-size: 12px; color: var(--muted); }
+  table.nut { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.nut td { padding: 5px 2px; border-bottom: 1px solid var(--line); }
+  table.nut td.v { text-align: right; font-variant-numeric: tabular-nums; }
+  table.nut tr.grp td { font-weight: 700; color: var(--accent); padding-top: 12px; border-bottom: 0; }
+  .meal { border-top: 1px solid var(--line); padding: 10px 0; }
+  .meal:first-child { border-top: 0; }
+  .meal .thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; margin-right: 6px; }
+  .meal ul { margin: 6px 0; padding-left: 18px; font-size: 14px; }
+  .datenav { display: flex; gap: 8px; align-items: center; }
+  .datenav input { flex: 1; text-align: center; }
+  .datenav button { flex: 0 0 auto; }
+  .busy { display: flex; align-items: center; gap: 10px; }
+  .spinner { width: 20px; height: 20px; border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: #222; color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; z-index: 20; max-width: 90%; }
+  .err { color: var(--danger); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Family Nutrition</h1>
+  <div class="who" id="who"></div>
+</header>
+
+<main>
+  <!-- Loading -->
+  <section id="v-loading" class="card"><div class="busy"><div class="spinner"></div><span>Loading…</span></div></section>
+
+  <!-- Sign in -->
+  <section id="v-signin" class="hidden">
+    <div class="card">
+      <h2>Sign in</h2>
+      <button class="primary block" id="btn-google">Sign in with Google</button>
+      <p class="muted small">If Google sign-in doesn't open from the home-screen app, use the email link below.</p>
+    </div>
+    <div class="card">
+      <h2>Or sign in by email link</h2>
+      <label class="f" for="in-email">Your email</label>
+      <input id="in-email" type="email" autocomplete="email" placeholder="name@gmail.com">
+      <button class="block" id="btn-sendlink" style="margin-top:10px">Email me a sign-in link</button>
+      <label class="f" for="in-link">Then either tap the link in the email, or copy the link and paste it here:</label>
+      <textarea id="in-link" placeholder="Paste the sign-in link from the email"></textarea>
+      <button class="block" id="btn-uselink" style="margin-top:10px">Sign in with pasted link</button>
+      <div id="signin-msg" class="muted small" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <!-- Not allowed -->
+  <section id="v-denied" class="hidden card">
+    <h2>Not on the family list yet</h2>
+    <p class="muted" id="denied-msg"></p>
+    <button id="btn-signout2">Sign out</button>
+  </section>
+
+  <!-- LOG -->
+  <section id="v-log" class="hidden">
+    <div id="log-start">
+      <div class="card">
+        <h2>Log a meal</h2>
+        <div class="row">
+          <div>
+            <label class="f" for="in-mealtype">Meal</label>
+            <select id="in-mealtype">
+              <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option><option value="snack">Snack</option>
+            </select>
+          </div>
+          <div>
+            <label class="f" for="in-when">When</label>
+            <input id="in-when" type="datetime-local">
+          </div>
+        </div>
+        <label class="f">Photos (top-down, plus one at an angle)</label>
+        <div class="photos" id="photos"></div>
+        <label class="btn" for="in-photo" style="display:inline-block">+ Add photo</label>
+        <input id="in-photo" type="file" accept="image/*" class="hidden">
+        <label class="f" for="in-note">Note (optional)</label>
+        <textarea id="in-note" placeholder="e.g. half the rice, no dressing, white cereal bowl"></textarea>
+        <div class="row" style="margin-top:12px">
+          <button class="primary" id="btn-analyze" disabled>Analyze photos</button>
+        </div>
+        <button class="ghost" id="btn-manual" style="margin-top:6px">Log without a photo</button>
+        <div id="analyze-status" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div id="log-confirm" class="hidden">
+      <div class="card">
+        <h2>Check each item</h2>
+        <p class="muted small">Weigh on the scale and type the grams when you can. Nothing is saved until you tap Save.</p>
+        <div id="plate-desc" class="muted small"></div>
+      </div>
+      <div id="items"></div>
+      <div class="card" id="hidden-card">
+        <h2>Possibly hidden</h2>
+        <p class="muted small">Tap to add anything that was actually used.</p>
+        <div class="chips" id="hidden-chips"></div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <input id="in-additem" placeholder="Add an item, e.g. apple">
+          <button class="shrink" id="btn-additem">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Meal total</h2>
+        <div class="totals" id="draft-totals"></div>
+      </div>
+      <div class="row" style="margin-bottom:16px">
+        <button id="btn-cancel">Cancel</button>
+        <button class="primary" id="btn-save">Save meal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="v-history" class="hidden">
+    <div class="card">
+      <div class="datenav">
+        <button id="btn-prev">‹</button>
+        <input id="in-day" type="date">
+        <button id="btn-next">›</button>
+      </div>
+    </div>
+    <div class="card"><h2>Day total</h2><div class="totals" id="day-totals"></div></div>
+    <div class="card"><h2>Meals</h2><div id="day-meals"></div></div>
+    <div class="card"><h2>All nutrients</h2><table class="nut" id="day-table"></table>
+      <p class="muted small" id="day-incomplete"></p></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="v-settings" class="hidden">
+    <div class="card">
+      <h2>You</h2>
+      <div id="me" class="muted"></div>
+      <button style="margin-top:10px" id="btn-signout">Sign out</button>
+    </div>
+    <div class="card hidden" id="admin-card">
+      <h2>Family members (admin)</h2>
+      <div id="allow-list"></div>
+      <div class="row" style="margin-top:10px">
+        <input id="in-allow-email" type="email" placeholder="email">
+        <input id="in-allow-name" placeholder="name">
+      </div>
+      <button class="block" id="btn-allow-add" style="margin-top:8px">Add member</button>
+    </div>
+    <div class="card">
+      <h2>About</h2>
+      <p class="muted small">Phase 1. Nutrient values come from USDA FoodData Central; the AI only identifies foods and estimates weights.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs hidden" id="tabs">
+  <button data-tab="log" class="on">Log</button>
+  <button data-tab="history">History</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut,
+  sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs,
+  serverTimestamp, Timestamp,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+
+// ---------- config ----------
+const firebaseConfig = {
+  apiKey: 'AIzaSyB0wM-lHp0FLU940m8X3XNodlQkzlHLXWY',
+  authDomain: 'family-nutrition-b4137.firebaseapp.com',
+  projectId: 'family-nutrition-b4137',
+  storageBucket: 'family-nutrition-b4137.firebasestorage.app',
+  messagingSenderId: '642783950359',
+  appId: '1:642783950359:web:9c09c9f119d7edb4bb8e52',
+};
+const WORKER = 'https://family-nutrition.quiet-rain-90d1.workers.dev';
+const ADMIN_EMAIL = 'seanqc58@gmail.com';
+const MAX_PHOTOS = 2;
+const LOW_CONFIDENCE = 0.6;
+
+const NUTRIENTS = [
+  ['Energy', 'calories', 'Calories', 'kcal'],
+  ['Macros', 'protein', 'Protein', 'g'], ['Macros', 'carbs', 'Carbohydrate', 'g'],
+  ['Macros', 'fiber', 'Fiber', 'g'], ['Macros', 'sugars', 'Sugars', 'g'], ['Macros', 'addedSugars', 'Added sugars', 'g'],
+  ['Fats', 'fat', 'Total fat', 'g'], ['Fats', 'satFat', 'Saturated fat', 'g'], ['Fats', 'transFat', 'Trans fat', 'g'],
+  ['Fats', 'monoFat', 'Monounsaturated fat', 'g'], ['Fats', 'polyFat', 'Polyunsaturated fat', 'g'], ['Fats', 'cholesterol', 'Cholesterol', 'mg'],
+  ['Minerals', 'sodium', 'Sodium', 'mg'], ['Minerals', 'potassium', 'Potassium', 'mg'], ['Minerals', 'calcium', 'Calcium', 'mg'],
+  ['Minerals', 'iron', 'Iron', 'mg'], ['Minerals', 'magnesium', 'Magnesium', 'mg'], ['Minerals', 'zinc', 'Zinc', 'mg'],
+  ['Minerals', 'phosphorus', 'Phosphorus', 'mg'], ['Minerals', 'selenium', 'Selenium', 'µg'],
+  ['Vitamins', 'vitA', 'Vitamin A (RAE)', 'µg'], ['Vitamins', 'vitC', 'Vitamin C', 'mg'], ['Vitamins', 'vitD', 'Vitamin D', 'µg'],
+  ['Vitamins', 'vitE', 'Vitamin E', 'mg'], ['Vitamins', 'vitK', 'Vitamin K', 'µg'], ['Vitamins', 'thiamin', 'Thiamin (B1)', 'mg'],
+  ['Vitamins', 'riboflavin', 'Riboflavin (B2)', 'mg'], ['Vitamins', 'niacin', 'Niacin (B3)', 'mg'], ['Vitamins', 'vitB6', 'Vitamin B6', 'mg'],
+  ['Vitamins', 'folate', 'Folate (DFE)', 'µg'], ['Vitamins', 'vitB12', 'Vitamin B12', 'µg'],
+  ['Other', 'caffeine', 'Caffeine', 'mg'], ['Other', 'alcohol', 'Alcohol', 'g'], ['Other', 'water', 'Water', 'g'],
+].map(([group, key, label, unit]) => ({ group, key, label, unit }));
+const NKEYS = NUTRIENTS.map((n) => n.key);
+
+// ---------- firebase ----------
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const dateKeyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const localInputValue = (d) => `${dateKeyOf(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const uid8 = () => Math.random().toString(36).slice(2, 10);
+
+function fmt(v, unit) {
+  if (v == null || isNaN(v)) return '—';
+  if (unit === 'kcal') return Math.round(v).toLocaleString();
+  if (v >= 100) return Math.round(v).toLocaleString();
+  if (v >= 10) return v.toFixed(1);
+  return v.toFixed(v >= 1 ? 1 : 2);
+}
+
+function toast(msg, ms = 2800) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+
+function mealTypeFor(d) {
+  const h = d.getHours();
+  if (h >= 4 && h < 11) return 'breakfast';
+  if (h >= 11 && h < 16) return 'lunch';
+  if (h >= 16 && h < 22) return 'dinner';
+  return 'snack';
+}
+
+async function api(path, opts = {}) {
+  const token = await auth.currentUser.getIdToken();
+  const res = await fetch(WORKER + path, {
+    ...opts,
+    headers: { ...(opts.headers || {}), Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  return data;
+}
+
+// Resize a photo to max 1280 px, JPEG.
+function resizeImage(file, max = 1280) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      const dataUrl = c.toDataURL('image/jpeg', 0.85);
+      c.toBlob((blob) => resolve({ dataUrl, blob }), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that photo')); };
+    img.src = url;
+  });
+}
+
+// nutrients for a given number of grams from per-100 g values
+function nutrientsFor(per100g, grams) {
+  const out = {};
+  for (const k of NKEYS) {
+    const v = per100g ? per100g[k] : null;
+    out[k] = v == null || !(grams >= 0) ? null : (v * grams) / 100;
+  }
+  return out;
+}
+
+function sumNutrients(list) {
+  const totals = {};
+  const incomplete = [];
+  for (const k of NKEYS) {
+    let sum = 0, missing = false, any = false;
+    for (const n of list) {
+      if (n[k] == null) missing = true; else { sum += n[k]; any = true; }
+    }
+    totals[k] = any ? sum : null;
+    if (missing && list.length) incomplete.push(k);
+  }
+  return { totals, incomplete };
+}
+
+function totalsHtml(t) {
+  return [['calories', 'kcal'], ['protein', 'protein g'], ['carbs', 'carbs g'], ['fat', 'fat g']]
+    .map(([k, lab]) => `<div><b>${fmt(t[k], k === 'calories' ? 'kcal' : 'g')}</b><span>${lab}</span></div>`).join('');
+}
+
+// ---------- state ----------
+let me = null;           // { uid, email, name, isAdmin }
+let photos = [];         // [{ dataUrl, blob }]
+let draft = null;        // { items: [], hidden: [], plateDescription, model }
+let currentDay = dateKeyOf(new Date());
+
+// ---------- views ----------
+const VIEWS = ['loading', 'signin', 'denied', 'log', 'history', 'settings'];
+function show(view) {
+  for (const v of VIEWS) $('v-' + v).classList.toggle('hidden', v !== view);
+  const inApp = ['log', 'history', 'settings'].includes(view);
+  $('tabs').classList.toggle('hidden', !inApp);
+  document.querySelectorAll('nav.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === view));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav.tabs button').forEach((b) =>
+  b.addEventListener('click', () => {
+    show(b.dataset.tab);
+    if (b.dataset.tab === 'history') loadDay(currentDay);
+    if (b.dataset.tab === 'settings') loadSettings();
+  })
+);
+
+// ---------- auth ----------
+$('btn-google').onclick = async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    $('signin-msg').textContent = `Google sign-in didn't work here (${e.code || e.message}). Use the email link instead.`;
+  }
+};
+
+$('btn-sendlink').onclick = async () => {
+  const email = $('in-email').value.trim().toLowerCase();
+  if (!email) return ($('signin-msg').textContent = 'Enter your email first.');
+  try {
+    await sendSignInLinkToEmail(auth, email, {
+      url: location.origin + location.pathname,
+      handleCodeInApp: true,
+    });
+    localStorage.setItem('fn_email', email);
+    $('signin-msg').textContent = 'Link sent. Check your email (and spam). Tap it, or copy it and paste it above.';
+  } catch (e) {
+    $('signin-msg').textContent = 'Could not send link: ' + (e.code || e.message);
+  }
+};
+
+async function finishEmailLink(link) {
+  let email = $('in-email').value.trim().toLowerCase() || localStorage.getItem('fn_email');
+  if (!email) email = (prompt('Confirm your email address') || '').trim().toLowerCase();
+  if (!email) return;
+  await signInWithEmailLink(auth, email, link);
+  localStorage.removeItem('fn_email');
+}
+
+$('btn-uselink').onclick = async () => {
+  const link = $('in-link').value.trim();
+  if (!isSignInWithEmailLink(auth, link)) return ($('signin-msg').textContent = "That doesn't look like a sign-in link.");
+  try { await finishEmailLink(link); }
+  catch (e) { $('signin-msg').textContent = 'Sign-in failed: ' + (e.code || e.message); }
+};
+
+if (isSignInWithEmailLink(auth, location.href)) {
+  finishEmailLink(location.href)
+    .then(() => history.replaceState(null, '', location.pathname))
+    .catch((e) => { show('signin'); $('signin-msg').textContent = 'Sign-in failed: ' + (e.code || e.message); });
+}
+
+$('btn-signout').onclick = () => signOut(auth);
+$('btn-signout2').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { me = null; $('who').textContent = ''; show('signin'); return; }
+  show('loading');
+  const email = (user.email || '').toLowerCase();
+  const isAdmin = email === ADMIN_EMAIL;
+  let allowed = isAdmin;
+  if (!allowed) {
+    try { allowed = (await getDoc(doc(db, 'allowlist', email))).exists(); } catch { allowed = false; }
+  }
+  if (!allowed) {
+    $('denied-msg').textContent = `${email} isn't on the family list. Ask Sean to add it in Settings.`;
+    show('denied');
+    return;
+  }
+  me = { uid: user.uid, email, name: user.displayName || email.split('@')[0], isAdmin };
+  $('who').textContent = me.name;
+  setDoc(doc(db, 'users', me.uid), { email, displayName: me.name, lastSeen: serverTimestamp() }, { merge: true })
+    .catch(() => {});
+  resetLog();
+  show('log');
+});
+
+// ---------- LOG: photos ----------
+function resetLog() {
+  photos = [];
+  draft = null;
+  const now = new Date();
+  $('in-when').value = localInputValue(now);
+  $('in-mealtype').value = mealTypeFor(now);
+  $('in-note').value = '';
+  $('analyze-status').innerHTML = '';
+  $('log-start').classList.remove('hidden');
+  $('log-confirm').classList.add('hidden');
+  renderPhotos();
+}
+$('in-when').addEventListener('change', () => {
+  const d = new Date($('in-when').value);
+  if (!isNaN(d)) $('in-mealtype').value = mealTypeFor(d);
+});
+
+function renderPhotos() {
+  $('photos').innerHTML = photos.map((p, i) =>
+    `<div class="ph"><img src="${p.dataUrl}" alt="meal photo ${i + 1}"><button class="x" data-i="${i}" aria-label="remove">✕</button></div>`).join('');
+  $('btn-analyze').disabled = photos.length === 0;
+  document.querySelector('label[for="in-photo"]').classList.toggle('hidden', photos.length >= MAX_PHOTOS);
+}
+$('photos').addEventListener('click', (e) => {
+  const b = e.target.closest('button.x');
+  if (!b) return;
+  photos.splice(Number(b.dataset.i), 1);
+  renderPhotos();
+});
+$('in-photo').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try { photos.push(await resizeImage(file)); renderPhotos(); }
+  catch (err) { toast(err.message); }
+});
+
+// ---------- LOG: analyze ----------
+function busy(el, msg) { el.innerHTML = `<div class="busy"><div class="spinner"></div><span>${esc(msg)}</span></div>`; }
+
+$('btn-analyze').onclick = async () => {
+  const status = $('analyze-status');
+  $('btn-analyze').disabled = true;
+  try {
+    busy(status, 'Identifying foods…');
+    const ai = await api('/analyze-meal', {
+      method: 'POST',
+      body: JSON.stringify({ images: photos.map((p) => p.dataUrl), note: $('in-note').value.trim() }),
+    });
+    busy(status, 'Looking up nutrients…');
+    const queries = [...ai.items.map((i) => i.usdaQuery), ...(ai.hiddenSuggestions || []).map((h) => h.usdaQuery)];
+    const matches = await api('/usda/match', { method: 'POST', body: JSON.stringify({ queries }) });
+    const items = ai.items.map((it, i) => makeItem(it, matches[i]));
+    const hidden = (ai.hiddenSuggestions || []).map((h, j) => ({
+      ...h, id: uid8(), match: matches[ai.items.length + j]?.best || null,
+      candidates: matches[ai.items.length + j]?.candidates || [],
+    }));
+    draft = { items, hidden, plateDescription: ai.plateDescription || '', model: ai.model || '' };
+    status.innerHTML = '';
+    openConfirm();
+  } catch (e) {
+    status.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  } finally {
+    $('btn-analyze').disabled = photos.length === 0;
+  }
+};
+
+$('btn-manual').onclick = () => {
+  draft = { items: [], hidden: [], plateDescription: '', model: '' };
+  openConfirm();
+  $('in-additem').focus();
+};
+
+function makeItem(ai, m) {
+  const aiGrams = Math.max(0, Math.round(Number(ai.grams) || 0));
+  return {
+    id: uid8(),
+    name: ai.name,
+    usdaQuery: ai.usdaQuery,
+    state: ai.state || 'n/a',
+    method: ai.method || '',
+    confidence: typeof ai.confidence === 'number' ? ai.confidence : null,
+    aiGrams: ai.fromAi === false ? null : aiGrams,
+    grams: aiGrams,
+    gramsSource: 'estimate',
+    match: m?.best || null,
+    candidates: m?.candidates || [],
+    swapOpen: false,
+  };
+}
+
+// ---------- LOG: confirm ----------
+function openConfirm() {
+  $('log-start').classList.add('hidden');
+  $('log-confirm').classList.remove('hidden');
+  $('plate-desc').textContent = draft.plateDescription;
+  renderItems();
+  renderHidden();
+  renderDraftTotals();
+  window.scrollTo(0, 0);
+}
+
+function itemMini(it) {
+  if (!it.match) return '<span class="err">No nutrient match — tap Change to pick one</span>';
+  const n = nutrientsFor(it.match.per100g, it.grams);
+  return `${fmt(n.calories, 'kcal')} kcal · P ${fmt(n.protein, 'g')} g · C ${fmt(n.carbs, 'g')} g · F ${fmt(n.fat, 'g')} g`;
+}
+
+function renderItems() {
+  $('items').innerHTML = draft.items.map((it, i) => {
+    const low = it.gramsSource === 'estimate' && it.confidence != null && it.confidence < LOW_CONFIDENCE;
+    const hint = [
+      it.aiGrams != null ? `AI estimate ${it.aiGrams} g` : 'added by hand',
+      it.confidence != null ? `confidence ${Math.round(it.confidence * 100)}%` : '',
+      [it.state !== 'n/a' ? it.state : '', it.method].filter(Boolean).join(', '),
+    ].filter(Boolean).join(' · ');
+    const portions = (it.match?.portions || []).slice(0, 6).map((p, j) =>
+      `<button class="chip" data-act="portion" data-i="${i}" data-j="${j}">${esc(p.label)} = ${Math.round(p.grams)} g</button>`).join('');
+    return `<div class="item ${low ? 'low' : ''}" data-i="${i}">
+      <div class="row"><input class="name" data-f="name" data-i="${i}" value="${esc(it.name)}">
+        <button class="shrink ghost danger" data-act="del" data-i="${i}" aria-label="remove">✕</button></div>
+      <div class="match">USDA: ${it.match ? esc(it.match.description) + ` <span class="small">(${esc(it.match.dataType)})</span>` : '—'}
+        <button class="ghost small" data-act="swap" data-i="${i}">Change</button></div>
+      <div class="grams">
+        <button data-act="minus" data-i="${i}">−10</button>
+        <input type="number" inputmode="decimal" min="0" step="1" data-f="grams" data-i="${i}" value="${it.grams}">
+        <span>g</span>
+        <button data-act="plus" data-i="${i}">+10</button>
+        <select data-f="gramsSource" data-i="${i}">
+          ${['scale', 'estimate', 'count', 'package'].map((s) => `<option value="${s}" ${s === it.gramsSource ? 'selected' : ''}>${{ scale: 'Weighed', estimate: 'Estimate', count: 'Counted', package: 'Package' }[s]}</option>`).join('')}
+        </select>
+      </div>
+      ${portions ? `<div class="chips" style="margin-top:6px">${portions}</div>` : ''}
+      <div class="hint">${esc(hint)}</div>
+      <div class="mini" id="mini-${it.id}">${itemMini(it)}</div>
+      ${it.swapOpen ? swapPanel(it, i) : ''}
+    </div>`;
+  }).join('') || '<div class="card muted">No items yet. Add one below.</div>';
+}
+
+function swapPanel(it, i) {
+  return `<div style="margin-top:8px">
+    <div class="row"><input data-f="swapq" data-i="${i}" value="${esc(it.usdaQuery || it.name)}">
+      <button class="shrink" data-act="swapsearch" data-i="${i}">Search</button></div>
+    <div class="results">${(it.candidates || []).map((c) =>
+      `<button data-act="pick" data-i="${i}" data-id="${c.fdcId}">${esc(c.description)} <span class="muted small">(${esc(c.dataType)})</span></button>`).join('') || '<div class="muted small">No results yet.</div>'}</div>
+  </div>`;
+}
+
+function renderHidden() {
+  $('hidden-card').classList.toggle('hidden', !draft.hidden.length);
+  $('hidden-chips').innerHTML = draft.hidden.map((h, j) =>
+    `<button class="chip" data-j="${j}">+ ${esc(h.name)} ~${Math.round(h.grams)} g</button>`).join('');
+}
+$('hidden-chips').addEventListener('click', (e) => {
+  const b = e.target.closest('button.chip');
+  if (!b) return;
+  const h = draft.hidden.splice(Number(b.dataset.j), 1)[0];
+  draft.items.push(makeItem({ name: h.name, usdaQuery: h.usdaQuery, grams: h.grams, confidence: 0.3, state: 'n/a' },
+    { best: h.match, candidates: h.candidates }));
+  renderItems(); renderHidden(); renderDraftTotals();
+});
+
+function renderDraftTotals() {
+  const list = draft.items.filter((it) => it.match).map((it) => nutrientsFor(it.match.per100g, it.grams));
+  $('draft-totals').innerHTML = totalsHtml(sumNutrients(list).totals);
+}
+
+$('items').addEventListener('input', (e) => {
+  const f = e.target.dataset.f;
+  if (!f) return;
+  const it = draft.items[Number(e.target.dataset.i)];
+  if (f === 'name') it.name = e.target.value;
+  if (f === 'swapq') it.usdaQuery = e.target.value;
+  if (f === 'grams') {
+    it.grams = Math.max(0, Number(e.target.value) || 0);
+    it.gramsSource = 'scale';
+    const sel = e.target.parentElement.querySelector('select');
+    if (sel) sel.value = 'scale';
+    e.target.closest('.item').classList.remove('low');
+    $('mini-' + it.id).innerHTML = itemMini(it);
+    renderDraftTotals();
+  }
+});
+$('items').addEventListener('change', (e) => {
+  if (e.target.dataset.f === 'gramsSource') {
+    draft.items[Number(e.target.dataset.i)].gramsSource = e.target.value;
+  }
+});
+
+$('items').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  const i = Number(b.dataset.i);
+  const it = draft.items[i];
+  const act = b.dataset.act;
+  if (act === 'del') draft.items.splice(i, 1);
+  if (act === 'minus') { it.grams = Math.max(0, it.grams - 10); }
+  if (act === 'plus') { it.grams += 10; }
+  if (act === 'portion') {
+    const p = it.match.portions[Number(b.dataset.j)];
+    it.grams = Math.round(p.grams); it.gramsSource = 'count';
+  }
+  if (act === 'swap') it.swapOpen = !it.swapOpen;
+  if (act === 'swapsearch') {
+    b.disabled = true;
+    try { it.candidates = (await api('/usda/search?q=' + encodeURIComponent(it.usdaQuery || it.name))).foods; }
+    catch (err) { toast(err.message); }
+  }
+  if (act === 'pick') {
+    b.disabled = true;
+    try { it.match = await api('/usda/food/' + b.dataset.id); it.swapOpen = false; }
+    catch (err) { toast(err.message); }
+  }
+  renderItems(); renderDraftTotals();
+});
+
+$('btn-additem').onclick = async () => {
+  const name = $('in-additem').value.trim();
+  if (!name) return;
+  $('btn-additem').disabled = true;
+  try {
+    const [m] = await api('/usda/match', { method: 'POST', body: JSON.stringify({ queries: [name] }) });
+    const it = makeItem({ name, usdaQuery: name, grams: 0, confidence: null, state: 'n/a', fromAi: false }, m);
+    it.swapOpen = true;
+    draft.items.push(it);
+    $('in-additem').value = '';
+    renderItems(); renderDraftTotals();
+  } catch (err) { toast(err.message); }
+  finally { $('btn-additem').disabled = false; }
+};
+
+$('btn-cancel').onclick = () => { if (confirm('Discard this meal?')) resetLog(); };
+
+// ---------- LOG: save ----------
+$('btn-save').onclick = async () => {
+  if (!draft.items.length) return toast('Add at least one item.');
+  if (draft.items.some((it) => !it.match)) return toast('Every item needs a USDA match (tap Change).');
+  if (draft.items.some((it) => !(it.grams > 0))) return toast('Every item needs grams.');
+  const when = new Date($('in-when').value);
+  if (isNaN(when)) return toast('Check the date and time.');
+
+  const btn = $('btn-save');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const mealId = `${Date.now()}-${uid8()}`;
+    const photoPaths = [];
+    for (let n = 0; n < photos.length; n++) {
+      const path = `users/${me.uid}/meals/${mealId}/${n + 1}.jpg`;
+      await uploadBytes(ref(storage, path), photos[n].blob, { contentType: 'image/jpeg' });
+      photoPaths.push(path);
+    }
+    const items = draft.items.map((it) => ({
+      name: it.name.trim() || it.match.description,
+      foodRef: `usda:${it.match.fdcId}`,
+      usdaDescription: it.match.description,
+      usdaDataType: it.match.dataType,
+      grams: Math.round(it.grams * 10) / 10,
+      gramsSource: it.gramsSource,
+      aiGrams: it.aiGrams,
+      aiConfidence: it.confidence,
+      state: it.state,
+      method: it.method,
+      per100g: it.match.per100g,
+      nutrients: nutrientsFor(it.match.per100g, it.grams),
+    }));
+    const { totals, incomplete } = sumNutrients(items.map((x) => x.nutrients));
+    const dateKey = dateKeyOf(when);
+    await setDoc(doc(db, 'users', me.uid, 'meals', mealId), {
+      eatenAt: Timestamp.fromDate(when),
+      dateKey,
+      mealType: $('in-mealtype').value,
+      note: $('in-note').value.trim(),
+      photoPaths,
+      plateDescription: draft.plateDescription,
+      aiModel: draft.model,
+      items,
+      totals,
+      incomplete,
+      createdAt: serverTimestamp(),
+    });
+    await recomputeDay(dateKey);
+    toast('Meal saved');
+    resetLog();
+    currentDay = dateKey;
+    show('history');
+    loadDay(currentDay);
+  } catch (e) {
+    toast('Save failed: ' + e.message, 5000);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save meal';
+  }
+};
+
+async function mealsOn(dateKey) {
+  const snap = await getDocs(query(collection(db, 'users', me.uid, 'meals'), where('dateKey', '==', dateKey)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => a.eatenAt.toMillis() - b.eatenAt.toMillis());
+}
+
+async function recomputeDay(dateKey) {
+  const meals = await mealsOn(dateKey);
+  const dayRef = doc(db, 'users', me.uid, 'days', dateKey);
+  if (!meals.length) return deleteDoc(dayRef);
+  const { totals, incomplete } = sumNutrients(meals.flatMap((m) => m.items.map((it) => it.nutrients)));
+  await setDoc(dayRef, { dateKey, totals, incomplete, mealCount: meals.length, updatedAt: serverTimestamp() });
+}
+
+// ---------- HISTORY ----------
+function shiftDay(key, delta) {
+  const [y, m, d] = key.split('-').map(Number);
+  return dateKeyOf(new Date(y, m - 1, d + delta));
+}
+$('btn-prev').onclick = () => loadDay(shiftDay(currentDay, -1));
+$('btn-next').onclick = () => loadDay(shiftDay(currentDay, 1));
+$('in-day').addEventListener('change', () => $('in-day').value && loadDay($('in-day').value));
+
+async function loadDay(key) {
+  currentDay = key;
+  $('in-day').value = key;
+  busy($('day-meals'), 'Loading…');
+  try {
+    const meals = await mealsOn(key);
+    const { totals, incomplete } = sumNutrients(meals.flatMap((m) => m.items.map((it) => it.nutrients)));
+    $('day-totals').innerHTML = totalsHtml(totals);
+
+    $('day-meals').innerHTML = meals.map((m) => {
+      const t = m.eatenAt.toDate();
+      return `<div class="meal">
+        <div class="row"><div><b>${esc(m.mealType[0].toUpperCase() + m.mealType.slice(1))}</b>
+          <span class="muted small">${pad(t.getHours())}:${pad(t.getMinutes())} · ${fmt(m.totals.calories, 'kcal')} kcal</span></div>
+          <button class="shrink ghost danger small" data-del="${esc(m.id)}">Delete</button></div>
+        <div class="thumbs" data-thumbs="${esc(m.id)}"></div>
+        <ul>${m.items.map((it) => `<li>${esc(it.name)} — ${fmt(it.grams, 'g')} g <span class="muted small">(${esc({ scale: 'weighed', estimate: 'estimate', count: 'counted', package: 'package' }[it.gramsSource] || it.gramsSource)})</span></li>`).join('')}</ul>
+        ${m.note ? `<div class="muted small">${esc(m.note)}</div>` : ''}
+      </div>`;
+    }).join('') || '<div class="muted">No meals logged this day.</div>';
+
+    for (const m of meals) {
+      const box = document.querySelector(`[data-thumbs="${CSS.escape(m.id)}"]`);
+      for (const p of m.photoPaths || []) {
+        getDownloadURL(ref(storage, p)).then((u) => {
+          const img = document.createElement('img'); img.src = u; img.alt = 'meal photo'; box.appendChild(img);
+        }).catch(() => {});
+      }
+    }
+
+    let html = '', group = '';
+    for (const n of NUTRIENTS) {
+      if (n.group !== group) { group = n.group; html += `<tr class="grp"><td colspan="2">${group}</td></tr>`; }
+      const star = meals.length && incomplete.includes(n.key) ? ' *' : '';
+      html += `<tr><td>${n.label}</td><td class="v">${fmt(totals[n.key], n.unit)} ${n.unit}${star}</td></tr>`;
+    }
+    $('day-table').innerHTML = html;
+    $('day-incomplete').textContent = meals.length && incomplete.length
+      ? '* Some foods had no USDA value for this nutrient, so the real total is likely higher.' : '';
+  } catch (e) {
+    $('day-meals').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  }
+}
+
+$('day-meals').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-del]');
+  if (!b || !confirm('Delete this meal?')) return;
+  const id = b.dataset.del;
+  try {
+    const snap = await getDoc(doc(db, 'users', me.uid, 'meals', id));
+    if (snap.exists()) {
+      for (const p of snap.data().photoPaths || []) await deleteObject(ref(storage, p)).catch(() => {});
+      await deleteDoc(snap.ref);
+      await recomputeDay(snap.data().dateKey);
+    }
+    toast('Meal deleted');
+    loadDay(currentDay);
+  } catch (err) { toast(err.message); }
+});
+
+// ---------- SETTINGS ----------
+async function loadSettings() {
+  $('me').textContent = `${me.name} · ${me.email}${me.isAdmin ? ' · admin' : ''}`;
+  $('admin-card').classList.toggle('hidden', !me.isAdmin);
+  if (me.isAdmin) loadAllowlist();
+}
+
+async function loadAllowlist() {
+  try {
+    const snap = await getDocs(collection(db, 'allowlist'));
+    $('allow-list').innerHTML = snap.docs.map((d) =>
+      `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)">
+        <div>${esc(d.data().name || '')} <span class="muted small">${esc(d.id)}</span></div>
+        <button class="shrink ghost danger small" data-rm="${esc(d.id)}">Remove</button></div>`).join('')
+      || '<div class="muted small">Only you so far (admin).</div>';
+  } catch (e) { $('allow-list').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+$('btn-allow-add').onclick = async () => {
+  const email = $('in-allow-email').value.trim().toLowerCase();
+  const name = $('in-allow-name').value.trim();
+  if (!email.includes('@')) return toast('Enter an email');
+  try {
+    await setDoc(doc(db, 'allowlist', email), { name, addedAt: serverTimestamp() });
+    $('in-allow-email').value = ''; $('in-allow-name').value = '';
+    loadAllowlist();
+  } catch (e) { toast(e.message); }
+};
+$('allow-list').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-rm]');
+  if (!b || !confirm(`Remove ${b.dataset.rm}?`)) return;
+  try { await deleteDoc(doc(db, 'allowlist', b.dataset.rm)); loadAllowlist(); } catch (err) { toast(err.message); }
+});
+</script>
+</body>
+</html>
